@@ -1,0 +1,564 @@
+﻿Program.Sub.ScreenSU.Start
+Gui.frmForecast..Create(BaseForm)
+Gui.frmForecast..Caption("Forecast Dashboard")
+Gui.frmForecast..Size(15315,10830)
+Gui.frmForecast..MinX(15045)
+Gui.frmForecast..MinY(10095)
+Gui.frmForecast..Position(0,0)
+Gui.frmForecast..BackColor(-2147483633)
+Gui.frmForecast..MousePointer(0)
+Gui.frmForecast..Event(UnLoad,Unload)
+Gui.frmForecast..AlwaysOnTop(False)
+Gui.frmForecast..FontName("Tahoma")
+Gui.frmForecast..FontSize(8.25)
+Gui.frmForecast..ControlBox(True)
+Gui.frmForecast..MaxButton(True)
+Gui.frmForecast..MinButton(True)
+Gui.frmForecast..Moveable(True)
+Gui.frmForecast..Sizeable(True)
+Gui.frmForecast..ShowInTaskBar(True)
+Gui.frmForecast..TitleBar(True)
+Gui.frmForecast.picGSSLogo.Create(PictureBox)
+Gui.frmForecast.picGSSLogo.Size(9250,1540)
+Gui.frmForecast.picGSSLogo.Position(5310,45)
+Gui.frmForecast.picGSSLogo.Enabled(True)
+Gui.frmForecast.picGSSLogo.Visible(True)
+Gui.frmForecast.picGSSLogo.Zorder(0)
+Gui.frmForecast.lblStatus.Create(Label,"Loading Data....",False,1125,210,0,120,45,True,0,"Arial",8,-2147483633,0,0)
+Gui.frmForecast.lblStatus.BorderStyle(0)
+Gui.frmForecast.pbStatus.Create(ProgressBar)
+Gui.frmForecast.pbStatus.Size(1935,255)
+Gui.frmForecast.pbStatus.Position(90,345)
+Gui.frmForecast.pbStatus.Visible(False)
+Gui.frmForecast.GsGCForecast.Create(GsGridControl)
+Gui.frmForecast.GsGCForecast.Size(14970,8505)
+Gui.frmForecast.GsGCForecast.Position(30,1215)
+Gui.frmForecast.GsGCForecast.TabStop(True)
+Gui.frmForecast.GsGCForecast.TabIndex(4)
+Gui.frmForecast.GsGCForecast.Enabled(True)
+Gui.frmForecast.GsGCForecast.Visible(True)
+Gui.frmForecast.GsGCForecast.Zorder(0)
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+	V.Global.bLoadDate.Declare
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+
+	V.Local.sGSSLogo.Declare
+	V.Local.sIcon.Declare
+	V.Local.sDir.Declare
+	V.Local.bDir.Declare
+
+	F.Intrinsic.String.Build("{0}\GAB\GAS\gss2.ico",V.Caller.PluginsDir,v.Local.sIcon)
+	F.Intrinsic.String.Build("{0}\GAB\GAS\GAB_GSS_Logo_Green_Dash.png",V.Caller.PluginsDir,V.Local.sGssLogo)
+	Gui.frmForecast.picGSSLogo.Picture(V.Local.sGSSLogo)
+	Gui.frmForecast..Icon(V.Local.sIcon)
+'	Gui.frmTotalsPL..Icon(V.Local.sIcon)
+
+	F.Intrinsic.Control.CallSub(SetAnchors)
+	F.Intrinsic.Control.CallSub(SetContextMenus)
+	F.Intrinsic.Control.CallSub(LoadDtForecast)
+
+	Gui.frmForecast..Show
+
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End
+
+	F.Intrinsic.Control.EndTry
+Program.Sub.Main.End
+
+Program.Sub.Unload.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+
+	F.Intrinsic.Control.If(V.Global.bLoadDate)
+		F.Intrinsic.Control.CallSub(Serialize)
+	F.Intrinsic.Control.EndIf
+	F.Intrinsic.Control.End
+
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End
+
+	F.Intrinsic.Control.EndTry
+Program.Sub.Unload.End
+
+Program.Sub.SetAnchors.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+
+	'0 - None
+	'1 - Top
+	'2 - Bottom
+	'4 - Left
+	'8 - Right
+
+	Gui.frmForecast.picGssLogo.Anchor(1)
+	Gui.frmForecast.GsGCForecast.Anchor(15)
+'	Gui.frmForecast.txtForecast.Anchor(10)
+'	Gui.frmForecast.lblForecast.Anchor(10)
+
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End
+
+	F.Intrinsic.Control.EndTry
+Program.Sub.SetAnchors.End
+
+Program.Sub.SetContextMenus.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+
+	Gui.frmForecast..ContextMenuCreate("ctxForecast")
+	Gui.frmForecast.GsGCForecast.ContextMenuAttach("ctxForecast")
+	Gui.frmForecast..ContextMenuAddItem("ctxForecast","Refresh",0,"Refresh")
+	Gui.frmForecast..ContextMenuAddItem("ctxForecast","Export",0,"Export")
+	Gui.frmForecast..ContextMenuAddItem("ctxForecast","RESETCOLUMNS",0,"Reset Columns")
+	Gui.frmForecast..ContextMenuSetItemEventHandler("ctxForecast","Refresh","LoadDtForecast")
+	Gui.frmForecast..ContextMenuSetItemEventHandler("ctxForecast","Export","MenuClickExport")
+	Gui.frmForecast..ContextMenuSetItemEventHandler("ctxForecast","RESETCOLUMNS","MenuClickResetColumns")
+
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End
+
+	F.Intrinsic.Control.EndTry
+Program.Sub.SetContextMenus.End
+
+Program.Sub.MenuClickExport.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+
+	V.Local.sFileExport.Declare
+	V.Local.bExcel.Declare
+	V.Local.bFileLocked.Declare
+	V.Local.sMsg.Declare
+	V.Local.sControl.Declare
+
+		F.Automation.MSExcel.CheckPresence(V.Local.bExcel)
+		F.Intrinsic.Control.If(V.Local.bExcel)
+			F.Intrinsic.String.Build("{0}\GAB_6173_Forecast_{1}_Export.xlsx",V.Caller.LocalGssTempDir,V.Local.sControl,V.Local.sFileExport)
+			F.Intrinsic.File.IsFileLocked(V.Local.sFileExport,V.Local.bFileLocked)
+			F.Intrinsic.Control.If(V.Local.bFileLocked)
+				F.Intrinsic.String.Build("File is already open. Please close and export again.{0}File: {1}",V.Ambient.NewLine,V.Local.sFileExport,V.Local.sMsg)
+				F.Intrinsic.UI.Msgbox(V.Local.sMsg,"File In Use")
+			F.Intrinsic.Control.Else
+				Gui.frmForecast.GsGCForecast.Export(V.Local.sFileExport,"xlsx")
+				F.Intrinsic.Task.ShellExec(0,"",V.Local.sFileExport,"","",1)
+			F.Intrinsic.Control.EndIf
+		F.Intrinsic.Control.Else
+			F.Intrinsic.String.Build("{0}\GAB_6173_Forecast_{1}_Export.csv",V.Caller.LocalGssTempDir,V.Local.sControl,V.Local.sFileExport)
+			F.Intrinsic.File.IsFileLocked(V.Local.sFileExport,V.Local.bFileLocked)
+			F.Intrinsic.Control.If(V.Local.bFileLocked)
+				F.Intrinsic.String.Build("File is already open. Please close and export again.{0}File: {1}",V.Ambient.NewLine,V.Local.sFileExport,V.Local.sMsg)
+				F.Intrinsic.UI.Msgbox(V.Local.sMsg,"File In Use")
+			F.Intrinsic.Control.Else
+				Gui.frmForecast.GsGCForecast.Export(V.Local.sFileExport,"csv")
+			F.Intrinsic.Control.EndIf
+			F.Intrinsic.Task.ShellExec(0,"",V.Local.sFileExport,"","",1)
+		F.Intrinsic.Control.EndIf
+
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End 
+	F.Intrinsic.Control.EndTry
+Program.Sub.MenuClickExport.End
+
+Program.Sub.MenuClickResetColumns.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+
+	V.Local.bSerialize.Declare
+
+	F.Intrinsic.Control.SelectCase(V.Args.MenuName)
+		F.Intrinsic.Control.Case("CTXFORECAST")
+			V.Global.bLoadDate.Set(False)
+			F.Global.Registry.AddValue(V.Caller.User,V.Caller.CompanyCode,"gvForecast",4631,1000,False,"Serialize",False,0,-999.0,1/1/1980,12:00:00 AM,"")
+			F.Intrinsic.Control.CallSub(LoadDtForecast)
+	F.Intrinsic.Control.EndSelect
+
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End
+
+	F.Intrinsic.Control.EndTry
+Program.Sub.MenuClickResetColumns.End
+
+Program.Sub.LoadDtForecast.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+
+	V.Local.sSQL.Declare
+	V.Local.dBegDate.Declare
+	V.Local.dEndDate.Declare
+	V.Local.sPart.Declare
+	V.Local.sActiveFilterString.Declare
+	V.Local.sFilter.Declare
+	V.Local.iRet.Declare
+	V.Local.fPercent.Declare
+	V.Local.iPercent.Declare
+	V.Local.i1.Declare
+	V.Local.iSub.Declare
+
+	Gui.frmForecast.lblStatus.Visible(True)
+	Gui.frmForecast.pbStatus.Visible(True)
+	Gui.frmForecast.pbStatus.Min(0)
+	Gui.frmForecast.pbStatus.Max(100)
+
+	F.ODBC.Connection!con.OpenCompanyConnection(300)
+
+	F.Intrinsic.Control.If(V.Global.bLoadDate)
+		F.Intrinsic.Control.CallSub(Serialize)
+	F.Intrinsic.Control.EndIf
+	V.Global.bLoadDate.Set(True)
+
+	F.Intrinsic.Control.If(V.DataTable.dtForecast.Exists)
+		F.Data.DataTable.Close("dtForecast")
+	F.Intrinsic.Control.EndIf
+
+	'Load records from custom table
+	F.Data.DataTable.CreateFromSQL("dtForecast","con","SELECT Customer,'' as CustName, Customer_PO, Cust_PO_Line, Customer+Customer_PO+Cust_PO_Line as CustPOLine, Part, Rev, Part+Rev as PartRev FROM GAB_6173_FORECAST GROUP BY Customer, CustName, Customer_PO, Cust_PO_Line, Part, Rev Order by PartRev",True)
+	f.Data.DataTable.AddColumn("dtForecast","SRQF","FLOAT")
+	f.Data.DataTable.AddColumn("dtForecast","ESQ","FLOAT")
+	f.Data.DataTable.AddColumn("dtForecast","QTY_INTRANSIT","FLOAT")
+	f.Data.DataTable.AddColumn("dtForecast","QTY_NET","FLOAT")
+	
+	'Find customer name
+	F.Data.Dictionary.CreateFromSQL("dicName","con","select Customer, Name_Customer from V_Customer_Master")
+	F.Data.Dictionary.SetDefaultReturn("dicName","")
+	F.Data.DataTable.FillFromDictionary("dtForecast","dicName","Customer","CustName")
+	F.Data.Dictionary.Close("dicName")
+
+	'Find and summarize qty order where qualifier is F
+	F.Data.Dictionary.CreateFromSQL("dicSRQF","con","select Customer+Customer_PO+Cust_PO_Line as CustPOLine, SUM(If(Qualifier='F',Qty_Ordered,If(Qualifier='f',Qty_Ordered,0))) from GAB_6173_FORECAST Group By CustPOLine")
+	F.Data.Dictionary.SetDefaultReturn("dicSRQF",0)
+	F.Data.DataTable.FillFromDictionary("dtForecast","dicSRQF","CustPOLine","SRQF")
+	F.Data.Dictionary.Close("dicSRQF")
+
+	'Find and summarize qty order from open SO exclude customer?s PO number start with PAU and PTH
+	F.Data.Dictionary.CreateFromSQL("dicESQ","con","select Part, Sum(Qty_Ordered) from V_Order_Lines A Left Join V_Order_Header B On A.Order_No = B.Order_No where B.Customer_PO Not Like 'PAU%' and B.Customer_PO Not Like 'PTH%' Group By Part")
+	F.Data.Dictionary.SetDefaultReturn("dicESQ",0)
+	F.Data.DataTable.FillFromDictionary("dtForecast","dicESQ","PartRev","ESQ")
+	F.Data.Dictionary.Close("dicESQ")
+
+	'Find Qty In-Transit
+	F.Data.Dictionary.CreateFromSQL("dicIntransit","con","select Customer+Customer_PO+Cust_PO_Line as CustPOLine, QTY_INTRANSIT from GAB_6173_FORECAST Group By CustPOLine, QTY_INTRANSIT")
+	F.Data.Dictionary.SetDefaultReturn("dicIntransit",0)
+	F.Data.DataTable.FillFromDictionary("dtForecast","dicIntransit","CustPOLine","QTY_INTRANSIT")
+	F.Data.Dictionary.Close("dicIntransit")
+
+	'Find prior net required qty
+	F.Data.Dictionary.CreateFromSQL("dicNet","con","select Customer+Customer_PO+Cust_PO_Line as CustPOLine, QTY_NET from GAB_6173_FORECAST Group By CustPOLine, QTY_NET")
+	F.Data.Dictionary.SetDefaultReturn("dicNet",0)
+	F.Data.DataTable.FillFromDictionary("dtForecast","dicNet","CustPOLine","QTY_Net")
+	F.Data.Dictionary.Close("dicNet")	
+
+	'Find and calculate (SRQ+Prior Net)-(ESQ+In-Transit) 
+	f.Data.DataTable.AddExpressionColumn("dtForecast","NSQ","FLOAT","(SRQF+QTY_NET)-(ESQ+QTY_INTRANSIT)")
+	f.Data.DataTable.AddColumn("dtForecast","EWQ","FLOAT")
+	f.Data.DataTable.AddColumn("dtForecast","OHQ","FLOAT")
+	f.Data.DataTable.AddColumn("dtForecast","SRQP","FLOAT")
+	
+	'Find and summarize qty order from open WO exclude customer?s PO number start with PAU and PTH
+	F.Data.Dictionary.CreateFromSQL("dicEWQ","con","select Part, Sum(Qty_Order)-SUM(QTY_COMPLETED) from V_JOB_HEADER where (Customer_PO Not Like 'PAU%' and Customer_PO Not Like 'PTH%') and date_closed = '1900-01-01' Group By Part")
+	F.Data.Dictionary.SetDefaultReturn("dicEWQ",0)
+	F.Data.DataTable.FillFromDictionary("dtForecast","dicEWQ","PartRev","EWQ")
+	F.Data.Dictionary.Close("dicEWQ")
+	
+	'Find qty onhand
+	F.Data.Dictionary.CreateFromSQL("dicOHQ","con","select Part, QTY_ONHAND from V_INVENTORY_MSTR")
+	F.Data.Dictionary.SetDefaultReturn("dicOHQ",0)
+	F.Data.DataTable.FillFromDictionary("dtForecast","dicOHQ","PartRev","OHQ")
+	F.Data.Dictionary.Close("dicOHQ")
+
+	'Find and summarize qty order where qualifier is P For next 40 days
+	F.Intrinsic.String.Build("select Customer+Customer_PO+Cust_PO_Line as CustPOLine, SUM(If(Qualifier='P',Qty_Ordered,0)) from GAB_6173_FORECAST WHERE DATE_SHIP BETWEEN convert(left(right(Customer_PO,12),4) + '-' + left(right(Customer_PO,8),2) + '-' + right(left(Customer_PO,11),2), sql_date) AND DATEADD(Day,90,convert(left(right(Customer_PO,12),4) + '-' + left(right(Customer_PO,8),2) + '-' + right(left(Customer_PO,11),2), sql_date)) Group By CustPOLine;",v.Ambient.Date.PervasiveDate,V.Local.sSQL)
+'	F.Intrinsic.String.Build("select Customer+Customer_PO+Cust_PO_Line as CustPOLine, SUM(If(Qualifier='P',Qty_Ordered,0)) from GAB_6173_FORECAST WHERE DATEDIFF(day,convert(left(right(Customer_PO,12),4) + '-' + left(right(Customer_PO,8),2) + '-' + right(left(Customer_PO,11),2), sql_date),current_date())<91 Group By CustPOLine;",v.Ambient.Date.PervasiveDate,V.Local.sSQL)
+	F.Data.Dictionary.CreateFromSQL("dicSRQP","con",V.Local.sSQL,True)
+	F.Data.Dictionary.SetDefaultReturn("dicSRQP",0)
+	F.Data.DataTable.FillFromDictionary("dtForecast","dicSRQP","CustPOLine","SRQP")
+	F.Data.Dictionary.Close("dicSRQP")
+
+	'Find and calculate SRQF+SRQP+QTY_NET-EWQ+QTY_INTRANSIT+OHQ 
+	f.Data.DataTable.AddExpressionColumn("dtForecast","NWQ","FLOAT","(SRQF+SRQP+QTY_NET)-(EWQ+QTY_INTRANSIT+OHQ)")
+	f.Data.DataTable.AddColumn("dtForecast","DATE_SHIP","DATE")
+	f.Data.DataTable.AddColumn("dtForecast","DATE_ETD","DATE")
+
+	'Find last ship date
+	F.Data.Dictionary.CreateFromSQL("dicShip","con","select Customer+Customer_PO+Cust_PO_Line as CustPOLine, MAX(DATE_SHIP) from GAB_6173_FORECAST  where Qualifier = 'F' Group By CustPOLine")
+	F.Data.Dictionary.SetDefaultReturn("dicShip","1900-01-01")
+	F.Data.DataTable.FillFromDictionary("dtForecast","dicShip","CustPOLine","DATE_SHIP")
+	F.Data.Dictionary.Close("dicSHIP")
+
+	'Find last ETD
+	F.Data.Dictionary.CreateFromSQL("dicETD","con","select Customer+Customer_PO+Cust_PO_Line as CustPOLine, MAX(DATE_ETD) from GAB_6173_FORECAST where Qualifier = 'F' Group By CustPOLine")
+	F.Data.Dictionary.SetDefaultReturn("dicETD","1900-01-01")
+	F.Data.DataTable.FillFromDictionary("dtForecast","dicETD","CustPOLine","DATE_ETD")
+	F.Data.Dictionary.Close("dicETD")
+
+	F.Intrinsic.Control.If(V.DataTable.dtForecast.Rowcount,=,0)
+		F.Intrinsic.UI.Msgbox("Record Not Found, Please Try Again","WO On-Time Delivery")
+		F.Data.Dictionary.Close("dicESQ")
+		F.ODBC.Connection!con.Close
+		F.Intrinsic.Control.End
+
+	F.Intrinsic.Control.EndIf
+
+	Gui.frmForecast.pbStatus.Value(15)
+
+	F.ODBC.Connection!con.Close
+
+	Gui.frmForecast.pbStatus.Value(90)
+	F.Intrinsic.Control.CallSub(LoadgvForecast)
+	F.Intrinsic.Control.CallSub(Deserialize)
+	Gui.frmForecast.pbStatus.Value(100)
+	Gui.frmForecast.lblStatus.Visible(False)
+	Gui.frmForecast.pbStatus.Visible(False)
+
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End
+
+	F.Intrinsic.Control.EndTry
+Program.Sub.LoadDtForecast.End
+
+Program.Sub.LoadgvForecast.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+
+	Gui.frmForecast.GsGCForecast.AddGridviewFromDatatable("gvForecast","dtForecast")
+	Gui.frmForecast.GsGCForecast.SuspendLayout()
+	Gui.frmForecast.GsGCForecast.SetGridViewProperty("gvForecast","MultiSelect",True)
+	Gui.frmForecast.GsGCForecast.SetGridViewProperty("gvForecast","AllowSort",True)
+	Gui.frmForecast.GsGCForecast.SetGridViewProperty("gvForecast","AllowFilter",True)
+	Gui.frmForecast.GsGCForecast.SetGridViewProperty("gvForecast","ShowGroupPanel",True)
+	Gui.frmForecast.GsGCForecast.SetGridViewProperty("gvForecast","OptionsViewColumnAutoWidth",False)
+	
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","PartRev","Visible",False)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","CustPOLine","Visible",False)
+
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Customer","Caption","Customer")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","CustName","Caption","Customer Name")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Customer_PO","Caption","Customer PO")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Cust_PO_Line","Caption","PO Line")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Part","Caption","Part")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Rev","Caption","Rev")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","SRQF","Caption","SRQ(F)")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","ESQ","Caption","ESQ")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Qty_Intransit","Caption","In-Transit")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Qty_Net","Caption","Prior Net Required")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","NSQ","Caption","NSQ")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","EWQ","Caption","EWQ")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","OHQ","Caption","OHQ")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","SRQP","Caption","SRQ(P)")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","NWQ","Caption","NWQ")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Date_Ship","Caption","Ship Date")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Date_ETD","Caption","ETD")
+
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Customer","AllowEdit",False)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","CustName","AllowEdit",False)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Customer_PO","AllowEdit",False)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Cust_PO_Line","AllowEdit",False)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Part","AllowEdit",False)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Rev","AllowEdit",False)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","SRQF","AllowEdit",False)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","ESQ","AllowEdit",False)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Qty_Intransit","AllowEdit",False)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Qty_Net","AllowEdit",False)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","NSQ","AllowEdit",False)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","EWQ","AllowEdit",False)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","OHQ","AllowEdit",False)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","SRQP","AllowEdit",False)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","NWQ","AllowEdit",False)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Date_Ship","AllowEdit",False)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Date_ETD","AllowEdit",False)
+
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Customer","ReadOnly",True)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","CustName","ReadOnly",True)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Customer_PO","ReadOnly",True)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Cust_PO_Line","ReadOnly",True)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Part","ReadOnly",True)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Rev","ReadOnly",True)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","SRQF","ReadOnly",True)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","ESQ","ReadOnly",True)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Qty_Intransit","ReadOnly",True)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Qty_Net","ReadOnly",True)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","NSQ","ReadOnly",True)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","EWQ","ReadOnly",True)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","OHQ","ReadOnly",True)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","SRQP","ReadOnly",True)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","NWQ","ReadOnly",True)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Date_Ship","ReadOnly",True)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Date_ETD","ReadOnly",True)
+
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Customer","MinWidth","100")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","CustName","MinWidth","200")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Customer_PO","MinWidth","150")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Cust_PO_Line","MinWidth","100")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Part","MinWidth","150")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Rev","MinWidth","70")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","SRQF","MinWidth","100")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","ESQ","MinWidth","100")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Qty_Intransit","MinWidth","100")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Qty_Net","MinWidth","100")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","NSQ","MinWidth","100")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","EWQ","MinWidth","100")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","OHQ","MinWidth","100")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","SRQP","MinWidth","100")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","NWQ","MinWidth","100")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Date_Ship","MinWidth","100")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Date_ETD","MinWidth","100")
+
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Customer","HeaderFontBold",True)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","CustName","HeaderFontBold",True)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Customer_PO","HeaderFontBold",True)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Cust_PO_Line","HeaderFontBold",True)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Part","HeaderFontBold",True)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Rev","HeaderFontBold",True)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","SRQF","HeaderFontBold",True)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","ESQ","HeaderFontBold",True)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Qty_Intransit","HeaderFontBold",True)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Qty_Net","HeaderFontBold",True)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","NSQ","HeaderFontBold",True)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","EWQ","HeaderFontBold",True)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","OHQ","HeaderFontBold",True)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","SRQP","HeaderFontBold",True)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","NWQ","HeaderFontBold",True)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Date_Ship","HeaderFontBold",True)
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Date_ETD","HeaderFontBold",True)
+
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Customer","HeaderHAlignment","Center")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","CustName","HeaderHAlignment","Center")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Customer_PO","HeaderHAlignment","Center")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Cust_PO_Line","HeaderHAlignment","Center")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Part","HeaderHAlignment","Center")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Rev","HeaderHAlignment","Center")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","SRQF","HeaderHAlignment","Center")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","ESQ","HeaderHAlignment","Center")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Qty_Intransit","HeaderHAlignment","Center")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Qty_Net","HeaderHAlignment","Center")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","NSQ","HeaderHAlignment","Center")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","EWQ","HeaderHAlignment","Center")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","OHQ","HeaderHAlignment","Center")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","SRQP","HeaderHAlignment","Center")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","NWQ","HeaderHAlignment","Center")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Date_Ship","HeaderHAlignment","Center")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Date_ETD","HeaderHAlignment","Center")
+
+'	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","CUSTOMER","CellHAlignment","Center")
+
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Date_Ship","DisplayCustomDatetime","d")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Date_ETD","DisplayCustomDatetime","d")
+
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","SRQF","DisplayCustomNumeric","#,###,##0.00####")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","ESQ","DisplayCustomNumeric","#,###,##0.00####")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Qty_Intransit","DisplayCustomNumeric","#,###,##0.00####")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","Qty_Net","DisplayCustomNumeric","#,###,##0.00####")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","NSQ","DisplayCustomNumeric","#,###,##0.00####")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","EWQ","DisplayCustomNumeric","#,###,##0.00####")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","OHQ","DisplayCustomNumeric","#,###,##0.00####")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","SRQP","DisplayCustomNumeric","#,###,##0.00####")
+	Gui.frmForecast.GsGCForecast.SetColumnProperty("gvForecast","NWQ","DisplayCustomNumeric","#,###,##0.00####")
+
+	F.Intrinsic.Control.CallSub(Highlight)
+
+	Gui.frmForecast.GsGCForecast.ResumeLayout()
+	Gui.frmForecast.GsGCForecast.MainView("gvForecast")
+
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End
+
+	F.Intrinsic.Control.EndTry
+Program.Sub.LoadgvForecast.End
+
+Program.Sub.Highlight.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+
+	V.Local.iCnt.Declare
+	V.Local.fMons.Declare
+	V.Local.dDateInit.Declare
+	V.Local.dDatePres.Declare
+	V.Local.iDeter.Declare
+	V.Local.sType.Declare
+	V.Local.bAgeCash.Declare
+	V.Local.bAgeCash2.Declare
+	V.Local.Status.Declare
+	V.Local.iSub.Declare
+
+	Gui.frmForecast.lblStatus.Caption("Highlight Double Parts....")
+
+	F.Intrinsic.Control.For(V.Local.iCnt,0,V.DataTable.dtForecast.RowCount--,1)
+		F.Intrinsic.Control.If(V.Local.iCnt,>,0)
+			F.Intrinsic.Math.Sub(V.Local.iCnt,1,V.Local.iSub)
+			F.Intrinsic.Control.If(V.DataTable.dtForecast(V.Local.iCnt).PartRev!FieldValTrim,=,V.DataTable.dtForecast(V.Local.iSub).PartRev!FieldValTrim)
+				Gui.frmForecast.GsGCForecast.SetRowAppearance("gvForecast",V.Local.iCnt,"BackColor","Yellow")
+				Gui.frmForecast.GsGCForecast.SetRowAppearance("gvForecast",V.Local.iSub,"BackColor","Yellow")
+			F.Intrinsic.Control.EndIf
+		F.Intrinsic.Control.EndIf
+	F.Intrinsic.Control.Next(V.Local.iCnt)
+
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End 
+	F.Intrinsic.Control.EndTry
+Program.Sub.Highlight.End
+
+Program.Sub.Serialize.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+
+	V.Local.sSerialize.Declare
+
+	'gvForecast
+	Gui.frmForecast.GsGCForecast.Serialize("gvForecast",V.Local.sSerialize)
+	F.Global.Registry.AddValue(V.Caller.User,V.Caller.CompanyCode,"gvForecast",4631,1000,False,"Serialize",False,0,-999.0,1/1/1980,12:00:00 AM,V.Local.sSerialize)
+
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End
+
+	F.Intrinsic.Control.EndTry
+Program.Sub.Serialize.End
+
+Program.Sub.Deserialize.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+
+	V.Local.sSerialize.Declare
+
+	'gvForecast
+	F.Global.Registry.ReadValue(V.Caller.User,V.Caller.CompanyCode,"gvForecast",4631,1000,6,"",V.Local.sSerialize)
+	F.Intrinsic.Control.If(V.Local.sSerialize.Trim,<>,"")
+		Gui.frmForecast.GsGCForecast.Deserialize(V.Local.sSerialize)
+	F.Intrinsic.Control.EndIf
+
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End
+
+	F.Intrinsic.Control.EndTry
+Program.Sub.Deserialize.End
+
+Program.Sub.Comments.Start
+${$0$}$GAB WO ON TIME DELIVERY$}$DYUNUS$}$7/30/2019 3:17:52 PM$}$False
+${$5$}$2.0.0.0$}$2
+${$6$}$dyunus$}$20211217172002416$}$xZ6SHi8g7O0Qsxe6AiO2NH3PnOKQRy0TznYrxuACv7L4CNbH9Bln5NzPVXGcjVXrf7Vpjs5Vi+E=
+Program.Sub.Comments.End
