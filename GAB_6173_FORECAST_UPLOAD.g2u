@@ -1,0 +1,632 @@
+﻿Program.Sub.ScreenSU.Start
+Gui.SS_Form_File..create
+Gui.SS_Form_File..caption("Upload File Selection")
+Gui.SS_Form_File..size(5365,1725)
+Gui.SS_Form_File..position(0,0)
+Gui.SS_Form_File..forecolor(0)
+Gui.SS_Form_File..BackColor(-2147483633)
+Gui.SS_Form_File..maxbutton(False)
+Gui.SS_Form_File..minbutton(False)
+Gui.SS_Form_File..mousepointer(0)
+Gui.SS_Form_File..sizeable(False)
+Gui.SS_Form_File..MinX(0)
+Gui.SS_Form_File..MinY(0)
+Gui.SS_Form_File..Event(UnLoad,SS_Form_File_UnLoad)
+Gui.SS_Form_File.lbl_txt_FileSelection.create(label,"File Name",True,1800,200,1,100,135,True,0,Arial,8,-2147483633,0)
+Gui.SS_Form_File.lbl_txt_FileSelection.LabelStretch(True)
+Gui.SS_Form_File.txt_FileSelection.create(textbox,"",True,4500,300,1,105,330,True,0,Arial,8,16777215,1)
+Gui.SS_Form_File.txt_FileSelection.tabstop(True)
+Gui.SS_Form_File.txt_FileSelection.tabindex(1)
+Gui.SS_Form_File.cmd_txt_FileSelection.create(button)
+Gui.SS_Form_File.cmd_txt_FileSelection.Caption("^")
+Gui.SS_Form_File.cmd_txt_FileSelection.size(330,330)
+Gui.SS_Form_File.cmd_txt_FileSelection.position(4680,330)
+Gui.SS_Form_File.cmd_txt_FileSelection.tabstop(True)
+Gui.SS_Form_File.cmd_txt_FileSelection.tabindex(2)
+Gui.SS_Form_File.cmd_txt_FileSelection.Event(Click,cmd_txt_FileSelection_Click)
+Gui.SS_Form_File.cmdFileOK.Create(Button)
+Gui.SS_Form_File.cmdFileOK.Size(855,375)
+Gui.SS_Form_File.cmdFileOK.Position(105,705)
+Gui.SS_Form_File.cmdFileOK.Caption("OK")
+Gui.SS_Form_File.cmdFileOK.Event(Click,Upload)
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+F.Intrinsic.Control.SetErrorHandler("Main_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+
+'show selection screen
+Gui.SS_Form_File..Show
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Main_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GAB_6173_FORECAST.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.CallSub(SS_Form_File_UnLoad)
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.Main.End
+
+Program.Sub.Upload.Start
+F.Intrinsic.Control.SetErrorHandler("Main_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+v.Local.sExcel.Declare(String)
+v.Local.sFilter.Declare(String)
+v.Local.sPart.Declare(String)
+v.Local.iC.Declare(long)
+v.Local.sSQL.Declare(String)
+
+v.Local.sBIN.Declare(String)
+v.Local.sProduct_Line.Declare(String)
+v.Local.sUM_Inventory.Declare(String)
+v.Local.famt_Cost.Declare(float)
+V.local.sCustomer.Declare(String)
+V.Local.sOrderno.Declare(String)
+v.Local.iLno.Declare(long)
+V.Local.sTemp.Declare(String)
+V.Local.sTemp1.Declare(String)
+V.Local.sTemp2.Declare(String)
+V.Local.sData.Declare(String)
+V.Local.sFilePath.Declare(String)
+
+V.Local.glaccount.Declare(String)
+V.Local.sShipID.Declare(String)
+v.Local.sline.Declare(String)
+v.Local.dDueDate.Declare(date)
+V.Local.dDateOrder.Declare(date)
+V.Local.dShipdate.Declare(date)
+v.Local.iShipDays.Declare(long)
+v.Local.bGLAcct.Declare(Boolean)
+V.Local.sCarrier.Declare(String)
+v.Local.sServiceType.Declare(String)
+v.Local.sRet.Declare(String)
+v.Local.sDesc.Declare(String)
+V.local.sCurr.Declare
+V.Local.sRev.Declare
+V.Local.sCustomerPO.Declare
+V.Local.bExist.Declare
+V.Local.fQtyOrdered.Declare
+V.Local.sShipDate.Declare
+V.Local.sDeliveryDate.Declare
+V.Local.dDeliveryDate.Declare
+V.Local.fInTransit.Declare
+V.Local.iExcel.Declare
+V.Local.iP.Declare
+V.Local.sDate.Declare
+V.Local.iDate.Declare
+V.Local.iLine.Declare
+V.Local.sMsg.Declare
+
+f.Intrinsic.Control.If(v.Screen.SS_Form_File!txt_FileSelection.text,=,"")
+	f.Intrinsic.UI.Msgbox("Invalid File")
+	f.Intrinsic.Control.ExitSub 
+f.Intrinsic.Control.EndIf
+
+F.Intrinsic.ui.InvokeWaitDialog("Upoading Lines...","Please Wait...") 
+
+F.Automation.MSExcel.CheckPresence(v.Local.bExist)
+F.Intrinsic.Control.If(v.Local.bExist,=,True)
+	f.Automation.MSExcel.ReadSpreadsheet(v.Screen.SS_Form_File!txt_FileSelection.text,v.Local.sExcel)
+	V.Local.iExcel.Set(1)
+F.Intrinsic.Control.Else	
+	F.Automation.OOCalc.ReadSpreadsheet(v.Screen.SS_Form_File!txt_FileSelection.text,True,v.Local.sExcel)	
+	V.Local.iExcel.Set(0)
+F.Intrinsic.Control.EndIf
+'
+F.Intrinsic.File.GetFileNameFromFQN(v.Screen.SS_Form_File!txt_FileSelection.text,V.Local.sCustomerPO)
+F.Intrinsic.String.Split(V.Local.sCustomerPO,".",V.Local.sCustomerPO)
+f.Intrinsic.String.Replace(v.Local.sExcel,"&^&","$!$",v.Local.sExcel)
+'replace Comma 
+f.Intrinsic.String.Replace(v.Local.sExcel,",","",v.Local.sExcel)
+
+f.Data.DataTable.CreateFromString("Import1",v.Local.sExcel,"RELEASE*!*RELEASE_STATUS*!*ORDER*!*LINE*!*PART*!*PRIOR_NET*!*NET_QTY*!*QTY_QUALIFIER*!*INTRANSIT_QTY*!*SHIP_DATE*!*DELIVERY_DATE*!*SCHEDULE_DATE*!*REV*!*BUYER*!*CUSTOMER*!*CUSTOMER_PO","String*!*String*!*String*!*String*!*String*!*String*!*String*!*String*!*String*!*String*!*String*!*String*!*String*!*String*!*String*!*String","*!*","$!$")
+f.Data.DataTable.DeleteRow("Import1",0)
+'
+'F.Intrinsic.Debug.InvokeDebugger
+'
+'F.Intrinsic.Debug.Stop
+'F.Intrinsic.Debug.ShowCallerInfo
+F.odbc.Connection!con.OpenConnection(V.Ambient.PDSN,V.Ambient.PUser,V.Ambient.PPass)
+
+F.ODBC.Connection!con.TableExists("GAB_6173_FORECAST",V.Local.bExist)
+F.Intrinsic.Control.If(V.Local.bExist,=,False)
+	F.ODBC.Connection!con.Execute("CREATE TABLE GAB_6173_FORECAST(CUSTOMER CHAR(6) NOT NULL, CUSTOMER_PO CHAR (15), CUST_PO_LINE CHAR(4), QUALIFIER CHAR (1), PART CHAR (17), REV CHAR (3), QTY_ORDERED NUMERIC (13,4), QTY_INTRANSIT NUMERIC (13,4), QTY_NET NUMERIC (13,4), DATE_SHIP DATE, DATE_ETD DATE);")
+F.Intrinsic.Control.EndIf
+
+v.Local.sFilter.Set("Len(PART)>0")
+f.Data.DataView.Create("Import1","DVImport")
+Function.Data.DataView.SetFilter("Import1","DVImport",v.Local.sFilter)
+
+'Delete all existing records
+F.ODBC.Connection!con.Execute("Delete from GAB_6173_FORECAST")
+
+F.Intrinsic.Control.If(V.Local.iExcel,=,1)
+
+	f.Intrinsic.Control.For(v.Local.iC,0,v.Dataview.Import1!DVImport.RowCount--,1)
+		F.Intrinsic.Control.If(v.Dataview.Import1!DVImport(V.Local.iC).INTRANSIT_QTY!FieldValTrim,=,"")
+			V.Local.fInTransit.Set(0)
+		F.Intrinsic.Control.Else
+			V.Local.fInTransit.Set(v.Dataview.Import1!DVImport(V.Local.iC).INTRANSIT_QTY!FieldVal)
+		F.Intrinsic.Control.EndIf
+	
+	'	F.Intrinsic.String.Left(v.Dataview.Import1!DVImport(V.Local.iC).SHIP_DATE!FieldValTrim,10,V.Local.sShipDate)
+		F.Intrinsic.Math.Add(V.Local.iC,2,V.Local.iLine)
+		F.Intrinsic.String.Instr(v.Dataview.Import1!DVImport(V.Local.iC).SHIP_DATE!FieldValTrim,"/",0,V.Local.iP)
+		F.Intrinsic.Control.If(V.Local.iP,=,2)
+			F.Intrinsic.String.Left(v.Dataview.Import1!DVImport(V.Local.iC).SHIP_DATE!FieldValTrim,1,V.Local.sDate)
+			V.Local.iDate.Set(V.Local.sDate)
+			F.Intrinsic.Control.If(V.Local.iDate,<,13)
+				F.Intrinsic.String.Instr(v.Dataview.Import1!DVImport(V.Local.iC).SHIP_DATE!FieldValTrim,"/",1,V.Local.iP)
+				F.Intrinsic.Control.If(V.Local.iP,=,2)
+					F.Intrinsic.String.Mid(v.Dataview.Import1!DVImport(V.Local.iC).SHIP_DATE!FieldValTrim,3,2,V.Local.sDate)
+					F.Intrinsic.String.Replace(V.Local.sDate,"/","",V.Local.sDate)
+					V.Local.iDate.Set(V.Local.sDate)
+					F.Intrinsic.Control.If(V.Local.iDate,>,31)
+						F.Intrinsic.String.Build("Row {0} has an invalid ship date! Making sure the date format is in MM/DD/YYYY and not blank. Please change the date first.",V.Local.iLine, V.Local.sMsg)
+						F.Intrinsic.UI.Msgbox(V.Local.sMsg)
+						F.Intrinsic.ui.CloseWaitDialog 
+						F.ODBC.Connection!con.Close 
+						f.Intrinsic.Control.End
+						F.Intrinsic.Control.ExitSub
+					F.Intrinsic.Control.EndIf
+				F.Intrinsic.Control.Elseif(V.Local.iP,=,3)	
+					F.Intrinsic.String.Mid(v.Dataview.Import1!DVImport(V.Local.iC).SHIP_DATE!FieldValTrim,3,2,V.Local.sDate)
+					F.Intrinsic.String.Replace(V.Local.sDate,"/","",V.Local.sDate)
+					V.Local.iDate.Set(V.Local.sDate)
+					F.Intrinsic.Control.If(V.Local.iDate,>,31)
+						F.Intrinsic.String.Build("Row {0} has an invalid ship date! Making sure the date format is in MM/DD/YYYY and not blank. Please change the date first.",V.Local.iLine, V.Local.sMsg)
+						F.Intrinsic.UI.Msgbox(V.Local.sMsg)
+						F.Intrinsic.ui.CloseWaitDialog 
+						F.ODBC.Connection!con.Close 
+						f.Intrinsic.Control.End
+						F.Intrinsic.Control.ExitSub
+					F.Intrinsic.Control.EndIf
+				F.Intrinsic.Control.EndIf
+			F.Intrinsic.Control.Else
+				F.Intrinsic.String.Build("Row {0} has an invalid ship date! Making sure the date format is in MM/DD/YYYY and not blank. Please change the date first.",V.Local.iLine, V.Local.sMsg)
+				F.Intrinsic.UI.Msgbox(V.Local.sMsg)
+				F.Intrinsic.ui.CloseWaitDialog 
+				F.ODBC.Connection!con.Close 
+				f.Intrinsic.Control.End
+				F.Intrinsic.Control.ExitSub
+			F.Intrinsic.Control.EndIf
+		F.Intrinsic.Control.ElseIf(V.Local.iP,=,3)
+			F.Intrinsic.String.Left(v.Dataview.Import1!DVImport(V.Local.iC).SHIP_DATE!FieldValTrim,2,V.Local.sDate)
+			V.Local.iDate.Set(V.Local.sDate)
+			F.Intrinsic.Control.If(V.Local.iDate,<,13)
+				F.Intrinsic.String.Instr(v.Dataview.Import1!DVImport(V.Local.iC).SHIP_DATE!FieldValTrim,"/",2,V.Local.iP)
+				F.Intrinsic.Control.If(V.Local.iP,=,2)
+					F.Intrinsic.String.Mid(v.Dataview.Import1!DVImport(V.Local.iC).SHIP_DATE!FieldValTrim,4,2,V.Local.sDate)
+					F.Intrinsic.String.Replace(V.Local.sDate,"/","",V.Local.sDate)
+					V.Local.iDate.Set(V.Local.sDate)
+					F.Intrinsic.Control.If(V.Local.iDate,>,31)
+						F.Intrinsic.String.Build("Row {0} has an invalid ship date! Making sure the date format is in MM/DD/YYYY and not blank. Please change the date first.",V.Local.iLine, V.Local.sMsg)
+						F.Intrinsic.UI.Msgbox(V.Local.sMsg)
+						F.Intrinsic.ui.CloseWaitDialog 
+						F.ODBC.Connection!con.Close 
+						f.Intrinsic.Control.End
+						F.Intrinsic.Control.ExitSub
+					F.Intrinsic.Control.EndIf
+				F.Intrinsic.Control.Elseif(V.Local.iP,=,3)	
+					F.Intrinsic.String.Mid(v.Dataview.Import1!DVImport(V.Local.iC).SHIP_DATE!FieldValTrim,4,2,V.Local.sDate)
+					F.Intrinsic.String.Replace(V.Local.sDate,"/","",V.Local.sDate)
+					V.Local.iDate.Set(V.Local.sDate)
+					F.Intrinsic.Control.If(V.Local.iDate,>,31)
+						F.Intrinsic.String.Build("Row {0} has an invalid ship date! Making sure the date format is in MM/DD/YYYY and not blank. Please change the date first.",V.Local.iLine, V.Local.sMsg)
+						F.Intrinsic.UI.Msgbox(V.Local.sMsg)
+						F.Intrinsic.ui.CloseWaitDialog 
+						F.ODBC.Connection!con.Close 
+						f.Intrinsic.Control.End
+						F.Intrinsic.Control.ExitSub
+					F.Intrinsic.Control.EndIf
+				F.Intrinsic.Control.EndIf
+			F.Intrinsic.Control.Else
+				F.Intrinsic.String.Build("Row {0} has an invalid ship date! Making sure the date format is in MM/DD/YYYY and not blank. Please change the date first.",V.Local.iLine, V.Local.sMsg)
+				F.Intrinsic.UI.Msgbox(V.Local.sMsg)
+				F.Intrinsic.ui.CloseWaitDialog 
+				F.ODBC.Connection!con.Close 
+				f.Intrinsic.Control.End
+				F.Intrinsic.Control.ExitSub
+			F.Intrinsic.Control.EndIf
+		F.Intrinsic.Control.Else
+			F.Intrinsic.String.Build("Row {0} has an invalid ship date! Making sure the date format is in MM/DD/YYYY and not blank. Please change the date first.",V.Local.iLine, V.Local.sMsg)
+			F.Intrinsic.UI.Msgbox(V.Local.sMsg)
+			F.Intrinsic.ui.CloseWaitDialog 
+			F.ODBC.Connection!con.Close 
+			f.Intrinsic.Control.End
+			F.Intrinsic.Control.ExitSub
+		F.Intrinsic.Control.EndIf
+		
+		F.Intrinsic.Date.ConvertDString(v.Dataview.Import1!DVImport(V.Local.iC).SHIP_DATE!FieldValTrim,"MM/DD/YYYY",V.Local.dShipDate)
+	'	F.Intrinsic.Date.ConvertDString(V.Local.sShipDate,"MM/DD/YYYY",V.Local.dShipDate)
+	
+		F.Intrinsic.Math.Add(V.Local.iC,1,V.Local.iLine)
+		F.Intrinsic.String.Instr(v.Dataview.Import1!DVImport(V.Local.iC).DELIVERY_DATE!FieldValTrim,"/",0,V.Local.iP)
+		F.Intrinsic.Control.If(V.Local.iP,=,2)
+			F.Intrinsic.String.Left(v.Dataview.Import1!DVImport(V.Local.iC).DELIVERY_DATE!FieldValTrim,1,V.Local.sDate)
+			V.Local.iDate.Set(V.Local.sDate)
+			F.Intrinsic.Control.If(V.Local.iDate,<,13)
+				F.Intrinsic.String.Instr(v.Dataview.Import1!DVImport(V.Local.iC).DELIVERY_DATE!FieldValTrim,"/",1,V.Local.iP)
+				F.Intrinsic.Control.If(V.Local.iP,=,2)
+					F.Intrinsic.String.Mid(v.Dataview.Import1!DVImport(V.Local.iC).DELIVERY_DATE!FieldValTrim,3,2,V.Local.sDate)
+					F.Intrinsic.String.Replace(V.Local.sDate,"/","",V.Local.sDate)
+					V.Local.iDate.Set(V.Local.sDate)
+					F.Intrinsic.Control.If(V.Local.iDate,>,31)
+						F.Intrinsic.String.Build("Row {0} has an invalid delivery date! Making sure the date format is in MM/DD/YYYY and not blank. Please change the date first.",V.Local.iLine, V.Local.sMsg)
+						F.Intrinsic.UI.Msgbox(V.Local.sMsg)
+						F.Intrinsic.ui.CloseWaitDialog 
+						F.ODBC.Connection!con.Close 
+						f.Intrinsic.Control.End
+						F.Intrinsic.Control.ExitSub
+					F.Intrinsic.Control.EndIf
+				F.Intrinsic.Control.Elseif(V.Local.iP,=,3)	
+					F.Intrinsic.String.Mid(v.Dataview.Import1!DVImport(V.Local.iC).DELIVERY_DATE!FieldValTrim,3,2,V.Local.sDate)
+					F.Intrinsic.String.Replace(V.Local.sDate,"/","",V.Local.sDate)
+					V.Local.iDate.Set(V.Local.sDate)
+					F.Intrinsic.Control.If(V.Local.iDate,>,31)
+						F.Intrinsic.String.Build("Row {0} has an invalid delivery date! Making sure the date format is in MM/DD/YYYY and not blank. Please change the date first.",V.Local.iLine, V.Local.sMsg)
+						F.Intrinsic.UI.Msgbox(V.Local.sMsg)
+						F.Intrinsic.ui.CloseWaitDialog 
+						F.ODBC.Connection!con.Close 
+						f.Intrinsic.Control.End
+						F.Intrinsic.Control.ExitSub
+					F.Intrinsic.Control.EndIf
+				F.Intrinsic.Control.EndIf
+			F.Intrinsic.Control.Else
+				F.Intrinsic.String.Build("Row {0} has an invalid delivery date! Making sure the date format is in MM/DD/YYYY and not blank. Please change the date first.",V.Local.iLine, V.Local.sMsg)
+				F.Intrinsic.UI.Msgbox(V.Local.sMsg)
+				F.Intrinsic.ui.CloseWaitDialog 
+				F.ODBC.Connection!con.Close 
+				f.Intrinsic.Control.End
+				F.Intrinsic.Control.ExitSub
+			F.Intrinsic.Control.EndIf
+		F.Intrinsic.Control.ElseIf(V.Local.iP,=,3)
+			F.Intrinsic.String.Left(v.Dataview.Import1!DVImport(V.Local.iC).DELIVERY_DATE!FieldValTrim,2,V.Local.sDate)
+			V.Local.iDate.Set(V.Local.sDate)
+			F.Intrinsic.Control.If(V.Local.iDate,<,13)
+				F.Intrinsic.String.Instr(v.Dataview.Import1!DVImport(V.Local.iC).DELIVERY_DATE!FieldValTrim,"/",2,V.Local.iP)
+				F.Intrinsic.Control.If(V.Local.iP,=,2)
+					F.Intrinsic.String.Mid(v.Dataview.Import1!DVImport(V.Local.iC).DELIVERY_DATE!FieldValTrim,4,2,V.Local.sDate)
+					F.Intrinsic.String.Replace(V.Local.sDate,"/","",V.Local.sDate)
+					V.Local.iDate.Set(V.Local.sDate)
+					F.Intrinsic.Control.If(V.Local.iDate,>,31)
+						F.Intrinsic.String.Build("Row {0} has an invalid delivery date! Making sure the date format is in MM/DD/YYYY and not blank. Please change the date first.",V.Local.iLine, V.Local.sMsg)
+						F.Intrinsic.UI.Msgbox(V.Local.sMsg)
+						F.Intrinsic.ui.CloseWaitDialog 
+						F.ODBC.Connection!con.Close 
+						f.Intrinsic.Control.End
+						F.Intrinsic.Control.ExitSub
+					F.Intrinsic.Control.EndIf
+				F.Intrinsic.Control.Elseif(V.Local.iP,=,3)	
+					F.Intrinsic.String.Mid(v.Dataview.Import1!DVImport(V.Local.iC).DELIVERY_DATE!FieldValTrim,4,2,V.Local.sDate)
+					F.Intrinsic.String.Replace(V.Local.sDate,"/","",V.Local.sDate)
+					V.Local.iDate.Set(V.Local.sDate)
+					F.Intrinsic.Control.If(V.Local.iDate,>,31)
+						F.Intrinsic.String.Build("Line {0} has invalid date! Making sure the date format is in MM/DD/YYYY and not blank. Please change the date first.",V.Local.iLine, V.Local.sMsg)
+						F.Intrinsic.UI.Msgbox(V.Local.sMsg)
+						F.Intrinsic.ui.CloseWaitDialog 
+						F.ODBC.Connection!con.Close 
+						f.Intrinsic.Control.End
+						F.Intrinsic.Control.ExitSub
+					F.Intrinsic.Control.EndIf
+				F.Intrinsic.Control.EndIf
+			F.Intrinsic.Control.Else
+				F.Intrinsic.String.Build("Row {0} has an invalid delivery date! Making sure the date format is in MM/DD/YYYY and not blank. Please change the date first.",V.Local.iLine, V.Local.sMsg)
+				F.Intrinsic.UI.Msgbox(V.Local.sMsg)
+				F.Intrinsic.ui.CloseWaitDialog 
+				F.ODBC.Connection!con.Close 
+				f.Intrinsic.Control.End
+				F.Intrinsic.Control.ExitSub
+			F.Intrinsic.Control.EndIf
+		F.Intrinsic.Control.Else
+			F.Intrinsic.String.Build("Row {0} has an invalid delivery date! Making sure the date format is in MM/DD/YYYY and not blank. Please change the date first.",V.Local.iLine, V.Local.sMsg)
+			F.Intrinsic.UI.Msgbox(V.Local.sMsg)
+			F.Intrinsic.ui.CloseWaitDialog 
+			F.ODBC.Connection!con.Close 
+			f.Intrinsic.Control.End
+			F.Intrinsic.Control.ExitSub
+		F.Intrinsic.Control.EndIf
+		
+		F.Intrinsic.Date.ConvertDString(v.Dataview.Import1!DVImport(V.Local.iC).DELIVERY_DATE!FieldValTrim,"MM/DD/YYYY",V.Local.dDeliveryDate)
+	'	F.Intrinsic.Date.ConvertDString(V.Local.sDeliveryDate,"MM/DD/YYYY",V.Local.dDeliveryDate)
+
+		F.Intrinsic.String.Build("insert into GAB_6173_FORECAST(CUSTOMER, CUSTOMER_PO, CUST_PO_LINE, QUALIFIER, PART, REV, QTY_ORDERED, QTY_INTRANSIT, QTY_NET, DATE_SHIP, DATE_ETD) values('{0}', '{1}', '{2}', '{3}', '{4}', '{5}', {6}, {7}, {8}, '{9}', '{10}');",v.Dataview.Import1!DVImport(V.Local.iC).CUSTOMER!FieldValTrim, v.Dataview.Import1!DVImport(V.Local.iC).CUSTOMER_PO!FieldValTrim, v.Dataview.Import1!DVImport(V.Local.iC).LINE!FieldValTrim, v.Dataview.Import1!DVImport(V.Local.iC).QTY_QUALIFIER!FieldValTrim, v.Dataview.Import1!DVImport(V.Local.iC).PART!FieldValTrim, v.Dataview.Import1!DVImport(V.Local.iC).REV!FieldValTrim, v.Dataview.Import1!DVImport(V.Local.iC).NET_QTY!FieldVal, V.Local.fInTransit, v.Dataview.Import1!DVImport(V.Local.iC).PRIOR_NET!FieldVal, V.Local.dShipDate.PervasiveDate, V.Local.dDeliveryDate.PervasiveDate, V.Local.sSQL)
+		F.ODBC.Connection!con.Execute(V.Local.sSQL)
+
+	F.Intrinsic.Control.Next(V.Local.iC)
+F.Intrinsic.Control.Else
+
+	f.Intrinsic.Control.For(v.Local.iC,0,v.Dataview.Import1!DVImport.RowCount--,1)
+		F.Intrinsic.Control.If(v.Dataview.Import1!DVImport(V.Local.iC).INTRANSIT_QTY!FieldValTrim,=,"")
+			V.Local.fInTransit.Set(0)
+		F.Intrinsic.Control.Else
+			V.Local.fInTransit.Set(v.Dataview.Import1!DVImport(V.Local.iC).INTRANSIT_QTY!FieldVal)
+		F.Intrinsic.Control.EndIf
+
+		F.Intrinsic.Math.Add(V.Local.iC,2,V.Local.iLine)
+		F.Intrinsic.String.Instr(v.Dataview.Import1!DVImport(V.Local.iC).SHIP_DATE!FieldValTrim,"/",0,V.Local.iP)
+		F.Intrinsic.Control.If(V.Local.iP,=,2)
+			F.Intrinsic.String.Left(v.Dataview.Import1!DVImport(V.Local.iC).SHIP_DATE!FieldValTrim,1,V.Local.sDate)
+			V.Local.iDate.Set(V.Local.sDate)
+			F.Intrinsic.Control.If(V.Local.iDate,<,13)
+				F.Intrinsic.String.Instr(v.Dataview.Import1!DVImport(V.Local.iC).SHIP_DATE!FieldValTrim,"/",1,V.Local.iP)
+				F.Intrinsic.Control.If(V.Local.iP,=,2)
+					F.Intrinsic.String.Mid(v.Dataview.Import1!DVImport(V.Local.iC).SHIP_DATE!FieldValTrim,3,2,V.Local.sDate)
+					F.Intrinsic.String.Replace(V.Local.sDate,"/","",V.Local.sDate)
+					V.Local.iDate.Set(V.Local.sDate)
+					F.Intrinsic.Control.If(V.Local.iDate,>,31)
+						F.Intrinsic.String.Build("Row {0} has an invalid ship date! Making sure the date format is in MM/DD/YYYY and not blank. Please change the date first.",V.Local.iLine, V.Local.sMsg)
+						F.Intrinsic.UI.Msgbox(V.Local.sMsg)
+						F.Intrinsic.ui.CloseWaitDialog 
+						F.ODBC.Connection!con.Close 
+						f.Intrinsic.Control.End
+						F.Intrinsic.Control.ExitSub
+					F.Intrinsic.Control.EndIf
+				F.Intrinsic.Control.Elseif(V.Local.iP,=,3)	
+					F.Intrinsic.String.Mid(v.Dataview.Import1!DVImport(V.Local.iC).SHIP_DATE!FieldValTrim,3,2,V.Local.sDate)
+					F.Intrinsic.String.Replace(V.Local.sDate,"/","",V.Local.sDate)
+					V.Local.iDate.Set(V.Local.sDate)
+					F.Intrinsic.Control.If(V.Local.iDate,>,31)
+						F.Intrinsic.String.Build("Row {0} has an invalid ship date! Making sure the date format is in MM/DD/YYYY and not blank. Please change the date first.",V.Local.iLine, V.Local.sMsg)
+						F.Intrinsic.UI.Msgbox(V.Local.sMsg)
+						F.Intrinsic.ui.CloseWaitDialog 
+						F.ODBC.Connection!con.Close 
+						f.Intrinsic.Control.End
+						F.Intrinsic.Control.ExitSub
+					F.Intrinsic.Control.EndIf
+				F.Intrinsic.Control.EndIf
+			F.Intrinsic.Control.Else
+				F.Intrinsic.String.Build("Row {0} has an invalid ship date! Making sure the date format is in MM/DD/YYYY and not blank. Please change the date first.",V.Local.iLine, V.Local.sMsg)
+				F.Intrinsic.UI.Msgbox(V.Local.sMsg)
+				F.Intrinsic.ui.CloseWaitDialog 
+				F.ODBC.Connection!con.Close 
+				f.Intrinsic.Control.End
+				F.Intrinsic.Control.ExitSub
+			F.Intrinsic.Control.EndIf
+		F.Intrinsic.Control.ElseIf(V.Local.iP,=,3)
+			F.Intrinsic.String.Left(v.Dataview.Import1!DVImport(V.Local.iC).SHIP_DATE!FieldValTrim,2,V.Local.sDate)
+			V.Local.iDate.Set(V.Local.sDate)
+			F.Intrinsic.Control.If(V.Local.iDate,<,13)
+				F.Intrinsic.String.Instr(v.Dataview.Import1!DVImport(V.Local.iC).SHIP_DATE!FieldValTrim,"/",2,V.Local.iP)
+				F.Intrinsic.Control.If(V.Local.iP,=,2)
+					F.Intrinsic.String.Mid(v.Dataview.Import1!DVImport(V.Local.iC).SHIP_DATE!FieldValTrim,4,2,V.Local.sDate)
+					F.Intrinsic.String.Replace(V.Local.sDate,"/","",V.Local.sDate)
+					V.Local.iDate.Set(V.Local.sDate)
+					F.Intrinsic.Control.If(V.Local.iDate,>,31)
+						F.Intrinsic.String.Build("Row {0} has an invalid ship date! Making sure the date format is in MM/DD/YYYY and not blank. Please change the date first.",V.Local.iLine, V.Local.sMsg)
+						F.Intrinsic.UI.Msgbox(V.Local.sMsg)
+						F.Intrinsic.ui.CloseWaitDialog 
+						F.ODBC.Connection!con.Close 
+						f.Intrinsic.Control.End
+						F.Intrinsic.Control.ExitSub
+					F.Intrinsic.Control.EndIf
+				F.Intrinsic.Control.Elseif(V.Local.iP,=,3)	
+					F.Intrinsic.String.Mid(v.Dataview.Import1!DVImport(V.Local.iC).SHIP_DATE!FieldValTrim,4,2,V.Local.sDate)
+					F.Intrinsic.String.Replace(V.Local.sDate,"/","",V.Local.sDate)
+					V.Local.iDate.Set(V.Local.sDate)
+					F.Intrinsic.Control.If(V.Local.iDate,>,31)
+						F.Intrinsic.String.Build("Row {0} has an invalid ship date! Making sure the date format is in MM/DD/YYYY and not blank. Please change the date first.",V.Local.iLine, V.Local.sMsg)
+						F.Intrinsic.UI.Msgbox(V.Local.sMsg)
+						F.Intrinsic.ui.CloseWaitDialog 
+						F.ODBC.Connection!con.Close 
+						f.Intrinsic.Control.End
+						F.Intrinsic.Control.ExitSub
+					F.Intrinsic.Control.EndIf
+				F.Intrinsic.Control.EndIf
+			F.Intrinsic.Control.Else
+				F.Intrinsic.String.Build("Row {0} has an invalid ship date! Making sure the date format is in MM/DD/YYYY and not blank. Please change the date first.",V.Local.iLine, V.Local.sMsg)
+				F.Intrinsic.UI.Msgbox(V.Local.sMsg)
+				F.Intrinsic.ui.CloseWaitDialog 
+				F.ODBC.Connection!con.Close 
+				f.Intrinsic.Control.End
+				F.Intrinsic.Control.ExitSub
+			F.Intrinsic.Control.EndIf
+		F.Intrinsic.Control.Else
+			F.Intrinsic.String.Build("Row {0} has an invalid ship date! Making sure the date format is in MM/DD/YYYY and not blank. Please change the date first.",V.Local.iLine, V.Local.sMsg)
+			F.Intrinsic.UI.Msgbox(V.Local.sMsg)
+			F.Intrinsic.ui.CloseWaitDialog 
+			F.ODBC.Connection!con.Close 
+			f.Intrinsic.Control.End
+			F.Intrinsic.Control.ExitSub
+		F.Intrinsic.Control.EndIf
+
+		F.Intrinsic.String.Left(v.Dataview.Import1!DVImport(V.Local.iC).SHIP_DATE!FieldValTrim,10,V.Local.sShipDate)
+'		F.Intrinsic.Date.ConvertDString(v.Dataview.Import1!DVImport(V.Local.iC).SHIP_DATE!FieldValTrim,"MM/DD/YYYY",V.Local.dShipDate)
+		F.Intrinsic.Date.ConvertDString(V.Local.sShipDate,"MM/DD/YYYY",V.Local.dShipDate)
+		
+		F.Intrinsic.Math.Add(V.Local.iC,2,V.Local.iLine)
+		F.Intrinsic.String.Instr(v.Dataview.Import1!DVImport(V.Local.iC).DELIVERY_DATE!FieldValTrim,"/",0,V.Local.iP)
+		F.Intrinsic.Control.If(V.Local.iP,=,2)
+			F.Intrinsic.String.Left(v.Dataview.Import1!DVImport(V.Local.iC).DELIVERY_DATE!FieldValTrim,1,V.Local.sDate)
+			V.Local.iDate.Set(V.Local.sDate)
+			F.Intrinsic.Control.If(V.Local.iDate,<,13)
+				F.Intrinsic.String.Instr(v.Dataview.Import1!DVImport(V.Local.iC).DELIVERY_DATE!FieldValTrim,"/",1,V.Local.iP)
+				F.Intrinsic.Control.If(V.Local.iP,=,2)
+					F.Intrinsic.String.Mid(v.Dataview.Import1!DVImport(V.Local.iC).DELIVERY_DATE!FieldValTrim,3,2,V.Local.sDate)
+					F.Intrinsic.String.Replace(V.Local.sDate,"/","",V.Local.sDate)
+					V.Local.iDate.Set(V.Local.sDate)
+					F.Intrinsic.Control.If(V.Local.iDate,>,31)
+						F.Intrinsic.String.Build("Row {0} has an invalid delivery date! Making sure the date format is in MM/DD/YYYY and not blank. Please change the date first.",V.Local.iLine, V.Local.sMsg)
+						F.Intrinsic.UI.Msgbox(V.Local.sMsg)
+						F.Intrinsic.ui.CloseWaitDialog 
+						F.ODBC.Connection!con.Close 
+						f.Intrinsic.Control.End
+						F.Intrinsic.Control.ExitSub
+					F.Intrinsic.Control.EndIf
+				F.Intrinsic.Control.Elseif(V.Local.iP,=,3)	
+					F.Intrinsic.String.Mid(v.Dataview.Import1!DVImport(V.Local.iC).DELIVERY_DATE!FieldValTrim,3,2,V.Local.sDate)
+					F.Intrinsic.String.Replace(V.Local.sDate,"/","",V.Local.sDate)
+					V.Local.iDate.Set(V.Local.sDate)
+					F.Intrinsic.Control.If(V.Local.iDate,>,31)
+						F.Intrinsic.String.Build("Row {0} has an invalid delivery date! Making sure the date format is in MM/DD/YYYY and not blank. Please change the date first.",V.Local.iLine, V.Local.sMsg)
+						F.Intrinsic.UI.Msgbox(V.Local.sMsg)
+						F.Intrinsic.ui.CloseWaitDialog 
+						F.ODBC.Connection!con.Close 
+						f.Intrinsic.Control.End
+						F.Intrinsic.Control.ExitSub
+					F.Intrinsic.Control.EndIf
+				F.Intrinsic.Control.EndIf
+			F.Intrinsic.Control.Else
+				F.Intrinsic.String.Build("Row {0} has an invalid delivery date! Making sure the date format is in MM/DD/YYYY and not blank. Please change the date first.",V.Local.iLine, V.Local.sMsg)
+				F.Intrinsic.UI.Msgbox(V.Local.sMsg)
+				F.Intrinsic.ui.CloseWaitDialog 
+				F.ODBC.Connection!con.Close 
+				f.Intrinsic.Control.End
+				F.Intrinsic.Control.ExitSub
+			F.Intrinsic.Control.EndIf
+		F.Intrinsic.Control.ElseIf(V.Local.iP,=,3)
+			F.Intrinsic.String.Left(v.Dataview.Import1!DVImport(V.Local.iC).DELIVERY_DATE!FieldValTrim,2,V.Local.sDate)
+			V.Local.iDate.Set(V.Local.sDate)
+			F.Intrinsic.Control.If(V.Local.iDate,<,13)
+				F.Intrinsic.String.Instr(v.Dataview.Import1!DVImport(V.Local.iC).DELIVERY_DATE!FieldValTrim,"/",2,V.Local.iP)
+				F.Intrinsic.Control.If(V.Local.iP,=,2)
+					F.Intrinsic.String.Mid(v.Dataview.Import1!DVImport(V.Local.iC).DELIVERY_DATE!FieldValTrim,4,2,V.Local.sDate)
+					F.Intrinsic.String.Replace(V.Local.sDate,"/","",V.Local.sDate)
+					V.Local.iDate.Set(V.Local.sDate)
+					F.Intrinsic.Control.If(V.Local.iDate,>,31)
+						F.Intrinsic.String.Build("Row {0} has an invalid delivery date! Making sure the date format is in MM/DD/YYYY and not blank. Please change the date first.",V.Local.iLine, V.Local.sMsg)
+						F.Intrinsic.UI.Msgbox(V.Local.sMsg)
+						F.Intrinsic.ui.CloseWaitDialog 
+						F.ODBC.Connection!con.Close 
+						f.Intrinsic.Control.End
+						F.Intrinsic.Control.ExitSub
+					F.Intrinsic.Control.EndIf
+				F.Intrinsic.Control.Elseif(V.Local.iP,=,3)	
+					F.Intrinsic.String.Mid(v.Dataview.Import1!DVImport(V.Local.iC).DELIVERY_DATE!FieldValTrim,4,2,V.Local.sDate)
+					F.Intrinsic.String.Replace(V.Local.sDate,"/","",V.Local.sDate)
+					V.Local.iDate.Set(V.Local.sDate)
+					F.Intrinsic.Control.If(V.Local.iDate,>,31)
+						F.Intrinsic.String.Build("Row {0} has an invalid delivery date! Making sure the date format is in MM/DD/YYYY and not blank. Please change the date first.",V.Local.iLine, V.Local.sMsg)
+						F.Intrinsic.UI.Msgbox(V.Local.sMsg)
+						F.Intrinsic.ui.CloseWaitDialog 
+						F.ODBC.Connection!con.Close 
+						f.Intrinsic.Control.End
+						F.Intrinsic.Control.ExitSub
+					F.Intrinsic.Control.EndIf
+				F.Intrinsic.Control.EndIf
+			F.Intrinsic.Control.Else
+				F.Intrinsic.String.Build("Row {0} has an invalid delivery date! Making sure the date format is in MM/DD/YYYY and not blank. Please change the date first.",V.Local.iLine, V.Local.sMsg)
+				F.Intrinsic.UI.Msgbox(V.Local.sMsg)
+				F.Intrinsic.ui.CloseWaitDialog 
+				F.ODBC.Connection!con.Close 
+				f.Intrinsic.Control.End
+				F.Intrinsic.Control.ExitSub
+			F.Intrinsic.Control.EndIf
+		F.Intrinsic.Control.Else
+			F.Intrinsic.String.Build("Row {0} has an invalid delivery date! Making sure the date format is in MM/DD/YYYY and not blank. Please change the date first.",V.Local.iLine, V.Local.sMsg)
+			F.Intrinsic.UI.Msgbox(V.Local.sMsg)
+			F.Intrinsic.ui.CloseWaitDialog 
+			F.ODBC.Connection!con.Close 
+			f.Intrinsic.Control.End
+			F.Intrinsic.Control.ExitSub
+		F.Intrinsic.Control.EndIf		
+	
+		F.Intrinsic.String.Left(v.Dataview.Import1!DVImport(V.Local.iC).DELIVERY_DATE!FieldValTrim,10,V.Local.sDeliveryDate)
+	'	F.Intrinsic.Date.ConvertDString(v.Dataview.Import1!DVImport(V.Local.iC).DELIVERY_DATE!FieldValTrim,"MM/DD/YYYY",V.Local.dDeliveryDate)
+		F.Intrinsic.Date.ConvertDString(V.Local.sDeliveryDate,"MM/DD/YYYY",V.Local.dDeliveryDate)
+
+		F.Intrinsic.String.Build("insert into GAB_6173_FORECAST(CUSTOMER, CUSTOMER_PO, CUST_PO_LINE, QUALIFIER, PART, REV, QTY_ORDERED, QTY_INTRANSIT, QTY_NET, DATE_SHIP, DATE_ETD) values('{0}', '{1}', '{2}', '{3}', '{4}', '{5}', {6}, {7}, {8}, '{9}', '{10}');",v.Dataview.Import1!DVImport(V.Local.iC).CUSTOMER!FieldValTrim, v.Dataview.Import1!DVImport(V.Local.iC).CUSTOMER_PO!FieldValTrim, v.Dataview.Import1!DVImport(V.Local.iC).LINE!FieldValTrim, v.Dataview.Import1!DVImport(V.Local.iC).QTY_QUALIFIER!FieldValTrim, v.Dataview.Import1!DVImport(V.Local.iC).PART!FieldValTrim, v.Dataview.Import1!DVImport(V.Local.iC).REV!FieldValTrim, v.Dataview.Import1!DVImport(V.Local.iC).NET_QTY!FieldVal, V.Local.fInTransit, v.Dataview.Import1!DVImport(V.Local.iC).PRIOR_NET!FieldVal, V.Local.dShipDate.PervasiveDate, V.Local.dDeliveryDate.PervasiveDate, V.Local.sSQL)
+		F.ODBC.Connection!con.Execute(V.Local.sSQL)
+
+	F.Intrinsic.Control.Next(V.Local.iC)
+
+F.Intrinsic.Control.EndIf
+
+F.Data.DataTable.Close("Import1")
+
+
+F.Intrinsic.ui.CloseWaitDialog 
+
+f.Intrinsic.UI.Msgbox("Upload completed successfully")
+
+F.ODBC.Connection!con.Close 
+
+f.Intrinsic.Control.End
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Main_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	F.Intrinsic.ui.CloseWaitDialog 
+	Function.Intrinsic.String.Concat("Project: GAB_6173_FORECAST.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.CallSub(SS_Form_File_UnLoad)
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.Upload.End
+
+Program.Sub.cmd_txt_FileSelection_Click.Start
+F.Intrinsic.Control.SetErrorHandler("Upload_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+
+Variable.Local.sFile.Declare(String)
+Variable.Local.sDir.Declare(String)
+V.Local.sType.Declare
+v.Local.bExist.Declare
+
+F.Intrinsic.String.Build("{0}\Select File",V.Caller.FilesDir,V.Local.sDir)
+Function.Intrinsic.UI.ShowOpenFileDialog("*.xls","",V.Local.sDir,V.Local.sFile)
+Function.Intrinsic.Control.If(V.Local.sFile,<>,"***CANCEL***")
+	F.Automation.MSExcel.CheckPresence(v.Local.bExist)
+	F.Intrinsic.Control.If(v.Local.bExist,=,False)
+		F.Intrinsic.String.Right(V.Local.sFile,4,V.Local.sType)
+		F.Intrinsic.Control.If(V.Local.sType,=,".xls")
+			Gui.SS_Form_File.txt_FileSelection.Text(V.Local.sFile)
+		F.Intrinsic.Control.Else
+			F.Intrinsic.UI.Msgbox("MS Excel program is not found and .xls file is required, please try again","File incorrect")
+		F.Intrinsic.Control.EndIf
+	F.Intrinsic.Control.Else	
+		Gui.SS_Form_File.txt_FileSelection.Text(V.Local.sFile)	
+	F.Intrinsic.Control.EndIf
+Function.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Upload_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GAB_6173_FORECAST.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.CallSub(SS_Form_File_UnLoad)
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.cmd_txt_FileSelection_Click.End
+
+Program.Sub.SS_Form_File_UnLoad.Start
+F.Intrinsic.Control.SetErrorHandler("Upload_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+
+F.Intrinsic.Control.END 
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Upload_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GAB_6173_FORECAST.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.SS_Form_File_UnLoad.End
+
+Program.Sub.Comments.Start
+${$0$}$GCG_4685_OrdLineUpload.g2$}$RAN$}$8/4/2017 11:08:32 AM$}$False
+${$3$}$0$}$$}$0$}$-1$}$$}$12:00:00 AM$}$Order Line upload from Maintenance Screen
+${$5$}$2.0.0.0$}$2
+${$6$}$dyunus$}$20210817135053434$}$xZ6SHi8g7O0Qsxe6AiO2NH3PnOKQRy0T01pKOZcVuC55QMZ+DDpQRP6kf/T1ldcEo8/Zcha1CxU=
+Program.Sub.Comments.End
